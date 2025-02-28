@@ -1,0 +1,8 @@
+{
+    "Total Requests": 3589.0,
+    "Total Failures": 906.0,
+    "MTBF (sec)": 0.33112582781456956,
+    "Failure Rate (failures/min)": 181.2,
+    "MTTR (sec)": 30,
+    "System Availability (%)": 1.09
+}

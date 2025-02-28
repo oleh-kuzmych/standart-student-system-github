@@ -1,0 +1,72 @@
+config:
+  target: "https://mto20ev9n5.execute-api.eu-central-1.amazonaws.com/Prod"
+  phases:
+    # Фаза 1: Нормальний режим на 300 секунд (5 хвилин)
+    - duration: 300
+      arrivalRate: 3
+    # Фаза 2: Режим з ін’єкцією помилок на 300 секунд (5 хвилин)
+    - duration: 300
+      arrivalRate: 3
+  defaults:
+    headers:
+      Content-Type: "application/json"
+scenarios:
+  - name: "Normal Operation"
+    flow:
+      - post:
+          url: "/students"
+          json:
+            name: "Load Test Student"
+            age: 25
+            email: "loadtest@example.com"
+          capture:
+            - json: "$.id"
+              as: "student_id"
+      - think: 5
+      - get:
+          url: "/students"
+      - think: 3
+      - put:
+          url: "/students/{{student_id}}"
+          json:
+            name: "Updated Load Test Student"
+            age: 26
+            email: "updatedload@example.com"
+      - think: 3
+      - delete:
+          url: "/students/{{student_id}}"
+
+  - name: "Error Operation"
+    flow:
+      # Початкове створення студента для отримання student_id
+      - post:
+          url: "/students"
+          json:
+            name: "Normal Student for Error Simulation"
+            age: 25
+            email: "normalforerror@example.com"
+          capture:
+            - json: "$.id"
+              as: "student_id"
+      - think: 3
+      # GET запит із симуляцією помилки
+      - get:
+          url: "/students"
+          headers:
+            X-Simulate-Error: "true"
+      - think: 3
+      # PUT запит із симуляцією помилки
+      - put:
+          url: "/students/{{student_id}}"
+          headers:
+            X-Simulate-Error: "true"
+          json:
+            name: "Simulated Error Update"
+            age: 27
+            email: "simerror_update@example.com"
+      - think: 3
+      # DELETE запит із симуляцією помилки
+      - delete:
+          url: "/students/{{student_id}}"
+          headers:
+            X-Simulate-Error: "true"

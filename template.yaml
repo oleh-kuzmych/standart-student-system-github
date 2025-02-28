@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Serverless Student Management System with full CRUD operations and custom metrics.
+  Region: eu-central-1
+
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  StudentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: StudentsTable
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  CreateStudentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.create_student.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref StudentsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref StudentsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+              Resource: "*"
+      Events:
+        CreateStudentApi:
+          Type: Api
+          Properties:
+            Path: /students
+            Method: POST
+
+  GetStudentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.get_students.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref StudentsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref StudentsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+              Resource: "*"
+      Events:
+        GetStudentsApi:
+          Type: Api
+          Properties:
+            Path: /students
+            Method: GET
+
+  UpdateStudentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.update_student.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref StudentsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref StudentsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+              Resource: "*"
+      Events:
+        UpdateStudentApi:
+          Type: Api
+          Properties:
+            Path: /students/{id}
+            Method: PUT
+
+  DeleteStudentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src.delete_student.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref StudentsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref StudentsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+              Resource: "*"
+      Events:
+        DeleteStudentApi:
+          Type: Api
+          Properties:
+            Path: /students/{id}
+            Method: DELETE

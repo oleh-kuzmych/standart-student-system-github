@@ -1,0 +1,57 @@
+image: python:3.8
+
+stages:
+  - build
+  - test
+  - deploy
+  - e2e_test
+
+variables:
+  AWS_DEFAULT_REGION: "eu-central-1"
+  SAM_CLI_TELEMETRY: "0"
+
+before_script:
+  - pip install aws-sam-cli
+  - pip install -r requirements.txt
+  - pip install pytest moto
+
+build:
+  stage: build
+  script:
+    - sam build
+  artifacts:
+    paths:
+      - .aws-sam
+  only:
+    - main
+
+unit_test:
+  stage: test
+  script:
+    - pytest tests/unit
+  only:
+    - main
+
+integration_test:
+  stage: test
+  script:
+    - pytest tests/integration
+  only:
+    - main
+
+deploy:
+  stage: deploy
+  script:
+    - sam deploy --stack-name standart-students-crud-stack --capabilities CAPABILITY_IAM --region $AWS_DEFAULT_REGION --resolve-s3 --no-confirm-changeset --no-fail-on-empty-changeset
+  only:
+    - main
+
+e2e_test:
+  stage: e2e_test
+  image: node:16
+  before_script: []  # Виключаємо глобальний before_script для цієї стадії
+  script:
+    - npm install -g newman
+    - newman run tests/e2e/postman_collection.json
+  only:
+    - main
